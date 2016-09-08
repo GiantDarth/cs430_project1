@@ -12,7 +12,7 @@ struct args {
 
 int main(int argc, const char* argv[]) {
     if(argc != 4) {
-        perror("usage: /path/to/cmd mode /path/to/inputFile /path/to/outputFile");
+        fprintf(stderr, "usage: pnm2pnm mode /path/to/inputFile /path/to/outputFile");
         exit(EXIT_FAILURE);
     }
 
