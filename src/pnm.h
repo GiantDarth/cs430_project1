@@ -11,20 +11,19 @@
 
 typedef struct pnmHeader {
     int mode;
-    // char** comments;
+    char** comments;
     size_t width;
     size_t height;
     size_t maxColorSize;
 } pnmHeader;
 
 typedef struct pixel {
-    size_t size;
+    unsigned char* channels;
 } pixel;
 
 void readHeader(pnmHeader& header, FILE* inputFd);
 
-int writeHeader(int mode, char** comments, size_t width, size_t height,
-    unsigned char maxColor, FILE* outputFd);
-int writeBody(char* buffer, int mode, FILE* outputFd);
+int writeHeader(pnmHeader header, FILE* outputFd);
+int writeBody(pnmHeader header, char* buffer, FILE* outputFd);
 
 #endif // CS430_PNM_H
