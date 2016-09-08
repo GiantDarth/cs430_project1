@@ -9,12 +9,19 @@
 #define CS430_PNM_GREY_MAX 65535
 #define CS430_PNM_FULL_MAX 65535
 
-struct pnm {
+typedef struct pnmHeader {
     int mode;
-    char** comments;
+    // char** comments;
     size_t width;
     size_t height;
-};
+    size_t maxColorSize;
+} pnmHeader;
+
+typedef struct pixel {
+    size_t size;
+} pixel;
+
+void readHeader(pnmHeader& header, FILE* inputFd);
 
 int writeHeader(int mode, char** comments, size_t width, size_t height,
     unsigned char maxColor, FILE* outputFd);
