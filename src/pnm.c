@@ -63,31 +63,41 @@ int writeHeader(int mode, char** comments, size_t width, size_t height,
     return 0;
 }
 
-int writeBody(char* buffer, int mode, FILE* outputFd) {
+int writeBody(char* buffer, int mode, size_t maxColorSize, FILE* outputFd) {
     if(mode < 1 || mode > 7) {
+        fprintf(stderr, "Error: Mode P%d not valid\n", mode);
         return -1;
     }
 
-    size_t size;
+    if(maxColorSize < CS430_PNM_MIN) {
+        fprintf(stderr, "Error: Max color size must be at least %d\n",
+            CS430_PNM_MIN);
+        return -1;
+    }
+
+    size_t size = 1;
     int binFlag = 0;
 
-    // If P4-P7, set write mode as binary.
+    // If P4 - P7, set write mode as binary.
     if(mode >= 4) {
         binFlag = 1;
     }
 
-    if(mode != 7) {
-        switch(mode % 3) {
-            // P1 or P4 = bitmap (1-bit)
-            case(1):
+    // P5 or P6 and color size is greater than 255, then use 2 bytes
+    if(binFlag && (mode % 3 == 2 || mode % 3 == 0) && maxColorSize > 255) {
+        size = 2;
+    }
 
-                break;
-            // P2 or P5 = greyscale (16-bit)
-            case(2):
-                break;
-            // P3 or P6 = full color (24-bit)
-            case(0):
-                break;
+    if(binFlag) {
+
+    }
+    else {
+        for(size_t j = 0; j < height; i++) {
+            for(size_t i = 0; i < width; i++) {
+                
+            }
         }
     }
+
+    return 0;
 }
