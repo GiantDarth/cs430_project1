@@ -55,7 +55,10 @@ int writeHeader(int mode, char** comments, size_t width, size_t height,
     }
 
     fprintf(outputFd, "%llu %llu\n", width, height);
-    fprintf(outputFd, "%u\n", maxColorSize);
+    // If not P1 or P4, then write maxColorSize
+    if(mode % 3 != 1) {
+        fprintf(outputFd, "%llu\n", maxColorSize);
+    }
 
     return 0;
 }
