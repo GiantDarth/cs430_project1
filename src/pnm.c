@@ -7,12 +7,45 @@
 
 int writeHeader(int mode, char** comments, size_t width, size_t height,
         size_t maxColorSize, FILE* outputFd) {
-    switch(mode % 3) {
-        case(1):
-            if(maxColorSize > CS43)
-        case(2):
-        case(0):
+    if(mode < 1 || mode > 7) {
+        fprintf(stderr, "Error: Mode P%d not valid\n", mode);
+        return -1;
+    }
 
+    if(maxColorSize < CS430_PNM_MIN) {
+        fprintf(stderr, "Error: Max color size must be at least %d\n",
+            CS430_PNM_MIN);
+        return -1;
+    }
+
+    switch(mode % 3) {
+        // P1 or P4
+        case(1):
+            if(maxColorSize > CS430_PNM_BITMAP_MAX) {
+                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
+                    mode, CS430_PNM_BITMAP_MAX);
+                return -1;
+            }
+
+            break;
+        // P2 or P5
+        case(2):
+            if(maxColorSize > CS430_PNM_GREY_MAX) {
+                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
+                    mode, CS430_PNM_GREY_MAX);
+                return -1;
+            }
+
+            break;
+        // P3 or P6
+        case(0):
+            if(maxColorSize > CS430_PNM_FULL_MAX) {
+                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
+                    mode, CS430_PNM_FULL_MAX);
+                return -1;
+            }
+
+            break;
     }
 
     fprintf(outputFd, "P%d\n", mode);
