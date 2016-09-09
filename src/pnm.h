@@ -18,10 +18,10 @@ typedef struct pnmHeader {
 } pnmHeader;
 
 typedef struct pixel {
-    unsigned char* channels;
+    unsigned char channels[3];
 } pixel;
 
-void readHeader(pnmHeader& header, FILE* inputFd);
+int readHeader(pnmHeader& header, FILE* inputFd);
 
 int writeHeader(pnmHeader header, FILE* outputFd);
 int writeBody(pnmHeader header, char* buffer, FILE* outputFd);

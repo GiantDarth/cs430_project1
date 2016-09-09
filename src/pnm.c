@@ -5,6 +5,10 @@
 
 #include "pnm.h"
 
+int readHeader(pnmHeader& header, FILE* outputFd) {
+
+}
+
 int writeHeader(pnmHeader header, FILE* outputFd) {
     if(header.mode < 1 || header.mode > 7) {
         fprintf(stderr, "Error: Mode P%d not valid\n", header.mode);
@@ -62,7 +66,7 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
     return 0;
 }
 
-int writeBody(pnmHeader header, char* buffer, FILE* outputFd) {
+int writeBody(pnmHeader header, pixel* imageBuffer, FILE* outputFd) {
     if(header.mode < 1 || header.mode > 7) {
         fprintf(stderr, "Error: Mode P%d not valid\n", header.mode);
         return -1;
@@ -74,32 +78,43 @@ int writeBody(pnmHeader header, char* buffer, FILE* outputFd) {
         return -1;
     }
 
-    size_t size = 1;
-    int binFlag = 0;
+    // 2 byte channels are not supported in this program
+    if(header.maxColorSize > 255) {
+        fprintf(stderr, "Error: 2-byte colors not supported.\n");
+        return -1;
+    }
+
+    size_t channelCount = 1;
+    // If P3 or P6 (e.g. Full color), then use 3 channels.
+    if(header.mode % 3 == 0) {
+        channelCount = 3;
+    }
 
     // If P4 - P7, set write mode as binary.
     if(header.mode >= 4) {
-        binFlag = 1;
+        fwrite(&imageBuffer, channelCount, header.height * header.width, outputFd);
     }
 
-    // P5 or P6 and color size is greater than 255, then use 2 bytes
-    if(binFlag && (header.mode % 3 == 2 || header.mode % 3 == 0)
-            && header.maxColorSize > 255) {
-        size = 2;
-    }
-
-    if(binFlag) {
-        for(size_t i = 0; i < header.height; i++) {
-            for(size_t j = 0; j < header.width; j++) {
-                buffer[header.height * j + i];
-            }
-        }
-    }
     else {
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
+                fprintf(outputFd, "%d", imageBuffer[header.height * i + j]
+                        .channels[0]);
+                // If P3 or P6 (Full color), then write remaining 2 channels
+                if(header.mode % 3 == 0) {
+                    fprintf(outputFd, " %d", imageBuffer[header.height * i + j]
+                            .channels[1]);
+                    fprintf(outputFd, " %d", imageBuffer[header.height * i + j]
+                            .channels[2]);
+                }
 
+                // If not the last item, write a following tab.
+                if(j < header.width - 1) {
+                    fprintf(outputFd, "\t");
+                }
             }
+
+            fprintf(outputFd, "\n");
         }
     }
 
