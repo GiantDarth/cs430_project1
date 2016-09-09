@@ -18,7 +18,7 @@ typedef struct pnmHeader {
 } pnmHeader;
 
 typedef struct pixel {
-    unsigned char channels[3];
+    unsigned char channels[4];
 } pixel;
 
 int readHeader(pnmHeader& header, FILE* inputFd);
