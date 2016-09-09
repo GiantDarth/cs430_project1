@@ -92,9 +92,8 @@ int writeBody(pnmHeader header, pixel* imageBuffer, FILE* outputFd) {
 
     // If P4 - P7, set write mode as binary.
     if(header.mode >= 4) {
-        fwrite(&imageBuffer, channelCount, header.height * header.width, outputFd);
+        fwrite(imageBuffer, channelCount, header.height * header.width, outputFd);
     }
-
     else {
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
