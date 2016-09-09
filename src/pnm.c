@@ -5,7 +5,7 @@
 
 #include "pnm.h"
 
-int readHeader(pnmHeader& header, FILE* outputFd) {
+int readHeader(pnmHeader* header, FILE* outputFd) {
 
 }
 
