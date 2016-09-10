@@ -8,6 +8,11 @@
 
 #include "pnm.h"
 
+int readChannel(pnmHeader header, FILE* inputFd, int isLast);
+int skipWhitespace(FILE* fd);
+int skipLine(FILE* fd);
+int getMagicNumber(FILE* fd);
+
 int skipWhitespace(FILE* fd) {
     char value;
 
@@ -184,6 +189,91 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
     }
 
     return 0;
+}
+
+int readBody(pnmHeader header, pixel* pixels, FILE* inputFd) {
+    if(header.mode < 1 || header.mode > 7) {
+        fprintf(stderr, "Error: Mode %d not valid\n", header.mode);
+        return -1;
+    }
+
+    if(header.mode == 3) {
+        int value, isLast;
+
+        for(size_t j = 0; j < header.height; j++) {
+            for(size_t i = 0; i < header.width; i++) {
+                isLast = j == header.height -1 && i == header.width;
+
+                if((value = readChannel(header, inputFd, isLast)) < 0) {
+                    return -1;
+                }
+                pixels[j * header.height + i].red = value;
+
+                if((value = readChannel(header, inputFd, isLast)) < 0) {
+                    return -1;
+                }
+                pixels[j * header.height + i].green = value;
+
+                if((value = readChannel(header, inputFd, isLast)) < 0) {
+                    return -1;
+                }
+                pixels[j * header.height + i].blue = value;
+            }
+        }
+    }
+    else if(header.mode == 6) {
+        size_t size = header.height * header.width;
+        size_t readSize = fread(pixels, sizeof(*pixels), size, inputFd);
+        if(readSize < size) {
+            fprintf(stderr, "Error: # of bytes read is less than what width & "
+                "height intended\n");
+            return -1;
+        }
+    }
+    else {
+        fprintf(stderr, "Error: Mode %d not supported\n", header.mode);
+        return -1;
+    }
+
+    return 0;
+}
+
+int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
+    long long value;
+
+    fscanf(inputFd, "%lld", &value);
+    if(value < 0) {
+        fprintf(stderr, "Error: Pixel value cannot be less than 0\n");
+        return -1;
+    }
+    else if((size_t)value > header.maxColorSize) {
+        fprintf(stderr, "Error: Pixel value cannot exceed supplied "
+            "max color value\n");
+    }
+
+    value = fgetc(inputFd);
+    if(value == EOF) {
+        // If end-of-file reached and not at the very last pixel
+        if(feof(inputFd) && !isLast) {
+            fprintf(stderr, "Error: EOF reached before intended width"
+                " & height # of pixels read.\n");
+            return -1;
+        }
+        // If some read error has occurred
+        else if(ferror(inputFd)) {
+            fprintf(stderr, "Error: Read error on raster data\n");
+            return -1;
+        }
+    }
+    // If there isn't at least some whitespace inbetween each pixel
+    // and not at the very last pixel
+    else if(!isspace(value) && !isLast) {
+        fprintf(stderr, "Error: There must be at least one whitespace"
+            "character inbetween pixel data\n");
+        return -1;
+    }
+
+    return value;
 }
 
 int writeHeader(pnmHeader header, FILE* outputFd) {
