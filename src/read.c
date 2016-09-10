@@ -14,85 +14,6 @@ int skipLine(FILE* fd);
 int skipUntilNext(FILE* fd);
 int getMagicNumber(FILE* fd);
 
-int skipWhitespace(FILE* fd) {
-    char value;
-
-    // Loop until either EOF or no whitespace remains.
-    while((value = fgetc(fd)) != EOF || !isspace(value));
-
-    if(feof(fd)) {
-        fprintf(stderr, "Error: File missing width");
-        return CHAR_MIN - 1;
-    }
-
-    if(ferror(fd)) {
-        perror("Error: Read error");
-        return CHAR_MIN - 1;
-    }
-
-    return value;
-}
-
-int skipLine(FILE* fd) {
-    char value;
-
-    while((value = fgetc(fd)) != EOF || value != '\n' || value != '\r');
-
-    if(feof(fd)) {
-        fprintf(stderr, "Error: File missing width");
-        return CHAR_MIN - 1;
-    }
-
-    if(ferror(fd)) {
-        perror("Error: Read error");
-        return CHAR_MIN - 1;
-    }
-
-    return value;
-}
-
-int skipUntilNext(FILE* fd) {
-    int value;
-
-    // Continue skipping whitespace and comments until an error occurs or no
-    // more comments exist.
-    while((value = skipWhitespace(fd)) < CHAR_MIN ||
-        (value == '#' && (value = skipLine(fd)) < CHAR_MIN));
-    if(value < CHAR_MIN) {
-        return -1;
-    }
-
-    return 0;
-}
-
-int getMagicNumber(FILE* fd) {
-    char buffer[3];
-
-    fgets(buffer, 3, fd);
-    if(buffer == NULL) {
-        fprintf(stderr, "Error: Empty file");
-        return -1;
-    }
-
-    if(strlen(buffer) < 2) {
-        fprintf(stderr, "Error: Magic number less than two characters");
-        return -1;
-    }
-
-    if(buffer[0] != 'P' || buffer[1] < '1' || buffer[1] > '7') {
-        fprintf(stderr, "Error: File lacks one of the correct magic numbers P1-P7\n");
-        return -1;
-    }
-
-    if(buffer[1] != '3' && buffer[1] != '6') {
-        fprintf(stderr, "Error: P%c not supported\n", buffer[1]);
-        return -1;
-    }
-
-    // Convert ASCII to single-digit number.
-    return buffer[1] - '0';
-}
-
 int readHeader(pnmHeader* header, FILE* inputFd) {
     int value;
 
@@ -236,6 +157,85 @@ int readBody(pnmHeader header, pixel* pixels, FILE* inputFd) {
     }
 
     return 0;
+}
+
+int skipWhitespace(FILE* fd) {
+    char value;
+
+    // Loop until either EOF or no whitespace remains.
+    while((value = fgetc(fd)) != EOF || !isspace(value));
+
+    if(feof(fd)) {
+        fprintf(stderr, "Error: File missing width");
+        return CHAR_MIN - 1;
+    }
+
+    if(ferror(fd)) {
+        perror("Error: Read error");
+        return CHAR_MIN - 1;
+    }
+
+    return value;
+}
+
+int skipLine(FILE* fd) {
+    char value;
+
+    while((value = fgetc(fd)) != EOF || value != '\n' || value != '\r');
+
+    if(feof(fd)) {
+        fprintf(stderr, "Error: File missing width");
+        return CHAR_MIN - 1;
+    }
+
+    if(ferror(fd)) {
+        perror("Error: Read error");
+        return CHAR_MIN - 1;
+    }
+
+    return value;
+}
+
+int skipUntilNext(FILE* fd) {
+    int value;
+
+    // Continue skipping whitespace and comments until an error occurs or no
+    // more comments exist.
+    while((value = skipWhitespace(fd)) < CHAR_MIN ||
+        (value == '#' && (value = skipLine(fd)) < CHAR_MIN));
+    if(value < CHAR_MIN) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int getMagicNumber(FILE* fd) {
+    char buffer[3];
+
+    fgets(buffer, 3, fd);
+    if(buffer == NULL) {
+        fprintf(stderr, "Error: Empty file");
+        return -1;
+    }
+
+    if(strlen(buffer) < 2) {
+        fprintf(stderr, "Error: Magic number less than two characters");
+        return -1;
+    }
+
+    if(buffer[0] != 'P' || buffer[1] < '1' || buffer[1] > '7') {
+        fprintf(stderr, "Error: File lacks one of the correct magic numbers P1-P7\n");
+        return -1;
+    }
+
+    if(buffer[1] != '3' && buffer[1] != '6') {
+        fprintf(stderr, "Error: P%c not supported\n", buffer[1]);
+        return -1;
+    }
+
+    // Convert ASCII to single-digit number.
+    return buffer[1] - '0';
 }
 
 int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
