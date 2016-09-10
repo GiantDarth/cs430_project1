@@ -6,11 +6,12 @@
 #include <string.h>
 #include <limits.h>
 
-#include "pnm.h"
+#include "read.h"
 
 int readChannel(pnmHeader header, FILE* inputFd, int isLast);
 int skipWhitespace(FILE* fd);
 int skipLine(FILE* fd);
+int skipUntilNext(FILE* fd);
 int getMagicNumber(FILE* fd);
 
 int skipWhitespace(FILE* fd) {
@@ -50,6 +51,20 @@ int skipLine(FILE* fd) {
     return value;
 }
 
+int skipUntilNext(FILE* fd) {
+    int value;
+
+    // Continue skipping whitespace and comments until an error occurs or no
+    // more comments exist.
+    while((value = skipWhitespace(fd)) < CHAR_MIN ||
+        (value == '#' && (value = skipLine(fd)) < CHAR_MIN));
+    if(value < CHAR_MIN) {
+        return -1;
+    }
+
+    return 0;
+}
+
 int getMagicNumber(FILE* fd) {
     char buffer[3];
 
@@ -79,7 +94,6 @@ int getMagicNumber(FILE* fd) {
 }
 
 int readHeader(pnmHeader* header, FILE* inputFd) {
-    char buffer[80];
     int value;
 
     // Read the magic number, if any
@@ -87,15 +101,9 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         return -1;
     }
 
-    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
-        return -1;
-    }
 
-    // If the remaining line starts with '#', skip until newline.
-    if(value == '#') {
-        if(skipLine(inputFd) < CHAR_MIN) {
-            return -1;
-        }
+    if(skipUntilNext(inputFd) < 0) {
+        return -1;
     }
 
 
@@ -115,14 +123,9 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         fprintf(stderr, "Error: Width must be greater than 0\n");
     }
 
-    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
-        return -1;
-    }
 
-    if(value == '#') {
-        if(skipLine(inputFd) < CHAR_MIN) {
-            return -1;
-        }
+    if(skipUntilNext(inputFd) < 0) {
+        return -1;
     }
 
 
@@ -142,14 +145,9 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         fprintf(stderr, "Error: Height must be greater than 0\n");
     }
 
-    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
-        return -1;
-    }
 
-    if(value == '#') {
-        if(skipLine(inputFd) < CHAR_MIN) {
-            return -1;
-        }
+    if(skipUntilNext(inputFd) < 0) {
+        return -1;
     }
 
 
@@ -177,12 +175,14 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         return -1;
     }
 
-    if(value == '#') {
-        if(skipLine(inputFd) < CHAR_MIN) {
-            return -1;
-        }
+
+    if(skipUntilNext(inputFd) < 0) {
+        return -1;
     }
 
+
+    // If character immediately following the max color value or comments is not
+    // whitespace, then return on error.
     if(!isspace(fgetc(inputFd))) {
         fprintf(stderr, "Error: Pixel values must be preceeded by a single whitespace\n");
         return -1;
@@ -274,89 +274,4 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     }
 
     return value;
-}
-
-int writeHeader(pnmHeader header, FILE* outputFd) {
-    if(header.mode < 1 || header.mode > 7) {
-        fprintf(stderr, "Error: Mode P%d not valid\n", header.mode);
-        return -1;
-    }
-
-    if(header.mode != 3 && header.mode != 6) {
-        fprintf(stderr, "Error: Mode P%d not supported\n", header.mode);
-    }
-
-    if(header.maxColorSize < CS430_PNM_MIN) {
-        fprintf(stderr, "Error: Max color size must be at least %d\n",
-            CS430_PNM_MIN);
-        return -1;
-    }
-
-    if(header.maxColorSize > CS430_PNM_FULL_MAX) {
-        fprintf(stderr, "Error: P%d only supports color size up to %d\n",
-            header.mode, CS430_PNM_FULL_MAX);
-        return -1;
-    }
-
-    fprintf(outputFd, "P%d\n", header.mode);
-    size_t i = 0;
-    while(header.comments[i] != NULL) {
-        fprintf(outputFd, "# %s\n", header.comments[i++]);
-    }
-
-    fprintf(outputFd, "%llu %llu\n", header.width, header.height);
-    // If not P1 or P4, then write maxColorSize
-    if(header.mode % 3 != 1) {
-        fprintf(outputFd, "%llu\n", header.maxColorSize);
-    }
-
-    return 0;
-}
-
-int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
-    if(header.mode < 1 || header.mode > 7) {
-        fprintf(stderr, "Error: Mode P%d not valid\n", header.mode);
-        return -1;
-    }
-
-    if(header.maxColorSize < CS430_PNM_MIN) {
-        fprintf(stderr, "Error: Max color size must be at least %d\n",
-            CS430_PNM_MIN);
-        return -1;
-    }
-
-    // 2 byte channels are not supported in this program
-    if(header.maxColorSize > 255) {
-        fprintf(stderr, "Error: 2-byte colors not supported.\n");
-        return -1;
-    }
-
-    // If P4 - P7, set write mode as binary.
-    if(header.mode == 6) {
-        // Write height * width number of pixels, which each pixel sizeof itself
-        // (e.g. 3 bytes for 3 channels)
-        fwrite(pixels, sizeof(*pixels), header.height * header.width, outputFd);
-    }
-    else if(header.mode == 3) {
-        for(size_t i = 0; i < header.height; i++) {
-            for(size_t j = 0; j < header.width; j++) {
-                fprintf(outputFd, "%d", pixels[header.height * i + j].red);
-                fprintf(outputFd, " %d", pixels[header.height * i + j].green);
-                fprintf(outputFd, " %d", pixels[header.height * i + j].blue);
-
-                // If not the last item, write a following tab.
-                if(j < header.width - 1) {
-                    fprintf(outputFd, "\t");
-                }
-            }
-
-            fprintf(outputFd, "\n");
-        }
-    }
-    else {
-        fprintf(stderr, "Error: Mode P%d not supported\n", header.mode);
-        return -1;
-    }
-
-    return 0;
 }

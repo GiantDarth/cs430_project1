@@ -1,8 +1,7 @@
 #ifndef CS430_PNM_H
 #define CS430_PNM_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #define CS430_PNM_MIN 1
 #define CS430_PNM_BITMAP_MAX 255
@@ -22,10 +21,5 @@ typedef struct pixel {
     unsigned char green;
     unsigned char blue;
 } pixel;
-
-int readHeader(pnmHeader& header, FILE* inputFd);
-
-int writeHeader(pnmHeader header, FILE* outputFd);
-int writeBody(pnmHeader header, char* buffer, FILE* outputFd);
 
 #endif // CS430_PNM_H
