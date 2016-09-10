@@ -2,11 +2,188 @@
 #define __USE_MINGW_ANSI_STDIO 1
 
 #include <inttypes.h>
+#include <ctype.h>
+#include <string.h>
+#include <limits.h>
 
 #include "pnm.h"
 
-int readHeader(pnmHeader* header, FILE* outputFd) {
+int skipWhitespace(FILE* fd) {
+    char value;
 
+    // Loop until either EOF or no whitespace remains.
+    while((value = fgetc(fd)) != EOF || !isspace(value));
+
+    if(feof(fd)) {
+        fprintf(stderr, "Error: File missing width");
+        return CHAR_MIN - 1;
+    }
+
+    if(ferror(fd)) {
+        perror("Error: Read error");
+        return CHAR_MIN - 1;
+    }
+
+    return value;
+}
+
+int skipLine(FILE* fd) {
+    char value;
+
+    while((value = fgetc(fd)) != EOF || value != '\n' || value != '\r');
+
+    if(feof(fd)) {
+        fprintf(stderr, "Error: File missing width");
+        return CHAR_MIN - 1;
+    }
+
+    if(ferror(fd)) {
+        perror("Error: Read error");
+        return CHAR_MIN - 1;
+    }
+
+    return value;
+}
+
+int getMagicNumber(FILE* fd) {
+    char buffer[3];
+
+    fgets(buffer, 3, fd);
+    if(buffer == NULL) {
+        fprintf(stderr, "Error: Empty file");
+        return -1;
+    }
+
+    if(strlen(buffer) < 2) {
+        fprintf(stderr, "Error: Magic number less than two characters");
+        return -1;
+    }
+
+    if(buffer[0] != 'P' || buffer[1] < '1' || buffer[1] > '7') {
+        fprintf(stderr, "Error: File lacks one of the correct magic numbers P1-P7\n");
+        return -1;
+    }
+
+    if(buffer[1] != '3' && buffer[1] != '6') {
+        fprintf(stderr, "Error: P%c not supported\n", buffer[1]);
+        return -1;
+    }
+
+    // Convert ASCII to single-digit number.
+    return buffer[1] - '0';
+}
+
+int readHeader(pnmHeader* header, FILE* inputFd) {
+    char buffer[80];
+    int value;
+
+    // Read the magic number, if any
+    if((header->mode = getMagicNumber(inputFd)) < 0) {
+        return -1;
+    }
+
+    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
+        return -1;
+    }
+
+    // If the remaining line starts with '#', skip until newline.
+    if(value == '#') {
+        if(skipLine(inputFd) < CHAR_MIN) {
+            return -1;
+        }
+    }
+
+
+    // Read the width, if there is one.
+    value = fscanf(inputFd, "%llu", &(header->width));
+    if(value == EOF) {
+        fprintf(stderr, "Error: No valid width before EOF\n");
+        return -1;
+    }
+
+    if(value < 1) {
+        fprintf(stderr, "Error: Invalid width (non-digits)\n");
+        return -1;
+    }
+
+    if(header->width == 0) {
+        fprintf(stderr, "Error: Width must be greater than 0\n");
+    }
+
+    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
+        return -1;
+    }
+
+    if(value == '#') {
+        if(skipLine(inputFd) < CHAR_MIN) {
+            return -1;
+        }
+    }
+
+
+    // Read the height, if there is one.
+    value = fscanf(inputFd, "%llu", &(header->height));
+    if(value == EOF) {
+        fprintf(stderr, "Error: No valid height before EOF\n");
+        return -1;
+    }
+
+    if(value < 1) {
+        fprintf(stderr, "Error: Invalid height (non-digits)\n");
+        return -1;
+    }
+
+    if(header->height == 0) {
+        fprintf(stderr, "Error: Height must be greater than 0\n");
+    }
+
+    if((value = skipWhitespace(inputFd)) < CHAR_MIN) {
+        return -1;
+    }
+
+    if(value == '#') {
+        if(skipLine(inputFd) < CHAR_MIN) {
+            return -1;
+        }
+    }
+
+
+    // Read the maxColorSize, if there is one.
+    value = fscanf(inputFd, "%llu", &(header->maxColorSize));
+    if(value == EOF) {
+        fprintf(stderr, "Error: No valid width before EOF\n");
+        return -1;
+    }
+
+    if(value < 1) {
+        fprintf(stderr, "Error: Invalid width (non-digits)\n");
+        return -1;
+    }
+
+    if(value < CS430_PNM_MIN) {
+        fprintf(stderr, "Error: Max color value cannot be less than %d.\n",
+            CS430_PNM_MIN);
+        return -1;
+    }
+
+    // If the value exceeds 1 byte (8-bits)
+    if(value > 255) {
+        fprintf(stderr, "Error: Max color value cannot be greater than 1 byte (aka. 255)\n");
+        return -1;
+    }
+
+    if(value == '#') {
+        if(skipLine(inputFd) < CHAR_MIN) {
+            return -1;
+        }
+    }
+
+    if(!isspace(fgetc(inputFd))) {
+        fprintf(stderr, "Error: Pixel values must be preceeded by a single whitespace\n");
+        return -1;
+    }
+
+    return 0;
 }
 
 int writeHeader(pnmHeader header, FILE* outputFd) {
