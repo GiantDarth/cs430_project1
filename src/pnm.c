@@ -282,40 +282,20 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
         return -1;
     }
 
+    if(header.mode != 3 && header.mode != 6) {
+        fprintf(stderr, "Error: Mode P%d not supported\n", header.mode);
+    }
+
     if(header.maxColorSize < CS430_PNM_MIN) {
         fprintf(stderr, "Error: Max color size must be at least %d\n",
             CS430_PNM_MIN);
         return -1;
     }
 
-    switch(header.mode % 3) {
-        // P1 or P4
-        case(1):
-            if(header.maxColorSize > CS430_PNM_BITMAP_MAX) {
-                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
-                    header.mode, CS430_PNM_BITMAP_MAX);
-                return -1;
-            }
-
-            break;
-        // P2 or P5
-        case(2):
-            if(header.maxColorSize > CS430_PNM_GREY_MAX) {
-                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
-                    header.mode, CS430_PNM_GREY_MAX);
-                return -1;
-            }
-
-            break;
-        // P3 or P6
-        case(0):
-            if(header.maxColorSize > CS430_PNM_FULL_MAX) {
-                fprintf(stderr, "Error: P%d only supports color size up to %d\n",
-                    header.mode, CS430_PNM_FULL_MAX);
-                return -1;
-            }
-
-            break;
+    if(header.maxColorSize > CS430_PNM_FULL_MAX) {
+        fprintf(stderr, "Error: P%d only supports color size up to %d\n",
+            header.mode, CS430_PNM_FULL_MAX);
+        return -1;
     }
 
     fprintf(outputFd, "P%d\n", header.mode);
@@ -333,7 +313,7 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
     return 0;
 }
 
-int writeBody(pnmHeader header, pixel* imageBuffer, FILE* outputFd) {
+int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
     if(header.mode < 1 || header.mode > 7) {
         fprintf(stderr, "Error: Mode P%d not valid\n", header.mode);
         return -1;
@@ -351,28 +331,18 @@ int writeBody(pnmHeader header, pixel* imageBuffer, FILE* outputFd) {
         return -1;
     }
 
-    size_t channelCount = 1;
-    // If P3 or P6 (e.g. Full color), then use 3 channels.
-    if(header.mode % 3 == 0) {
-        channelCount = 3;
-    }
-
     // If P4 - P7, set write mode as binary.
-    if(header.mode >= 4) {
-        fwrite(imageBuffer, channelCount, header.height * header.width, outputFd);
+    if(header.mode == 6) {
+        // Write height * width number of pixels, which each pixel sizeof itself
+        // (e.g. 3 bytes for 3 channels)
+        fwrite(pixels, sizeof(*pixels), header.height * header.width, outputFd);
     }
-    else {
+    else if(header.mode == 3) {
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
-                fprintf(outputFd, "%d", imageBuffer[header.height * i + j]
-                        .channels[0]);
-                // If P3 or P6 (Full color), then write remaining 2 channels
-                if(header.mode % 3 == 0) {
-                    fprintf(outputFd, " %d", imageBuffer[header.height * i + j]
-                            .channels[1]);
-                    fprintf(outputFd, " %d", imageBuffer[header.height * i + j]
-                            .channels[2]);
-                }
+                fprintf(outputFd, "%d", pixels[header.height * i + j].red);
+                fprintf(outputFd, " %d", pixels[header.height * i + j].green);
+                fprintf(outputFd, " %d", pixels[header.height * i + j].blue);
 
                 // If not the last item, write a following tab.
                 if(j < header.width - 1) {
@@ -382,6 +352,10 @@ int writeBody(pnmHeader header, pixel* imageBuffer, FILE* outputFd) {
 
             fprintf(outputFd, "\n");
         }
+    }
+    else {
+        fprintf(stderr, "Error: Mode P%d not supported\n", header.mode);
+        return -1;
     }
 
     return 0;
