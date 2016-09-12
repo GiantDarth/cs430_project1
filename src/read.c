@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include "read.h"
 
@@ -239,9 +240,44 @@ int getMagicNumber(FILE* fd) {
 }
 
 int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
-    long long value;
+    char buffer[4] = { '\0' };
+    char** endptr;
+    int c, value, i = 0;
+    // Continue to read character-by-character until end-of-buffer reached,
+    // or end-of-file / read error reached, or some non-decimal is reached.
+    while((size_t)i < sizeof(buffer) - 1 && (c = fgetc(inputFd)) != EOF && isdigit(c)) {
+        buffer[i++] = c;
+    }
 
-    fscanf(inputFd, "%lld", &value);
+    if(c == EOF) {
+        // If end-of-file reached and not at the very last pixel
+        if(!isLast && feof(inputFd)) {
+            fprintf(stderr, "Error: Premature EOF reading pixel data");
+            return -1;
+        }
+        // If some read error has occurred
+        else if(ferror(inputFd)) {
+            perror("Error: Read error during pixel data");
+            return -1;
+        }
+    }
+    // If there isn't at least some whitespace inbetween each pixel
+    // and not at the very last pixel
+    else if(!isLast && !isspace(c)) {
+        fprintf(stderr, "Error: There must be at least one whitespace "
+            "character inbetween pixel data\n");
+        return -1;
+    }
+
+    value = strtol(buffer, endptr, 10);
+    // If the first character is not empty and the set first invalid
+    // character is empty, then the whole string is valid. (see 'man strtol')
+    // Otherwise, part of the string is not a number.
+    if(!(*buffer != '\0' && **endptr == '\0')) {
+        fprintf(stderr, "Error: Invalid decimal value on channel\n");
+        return -1;
+    }
+
     if(value < 0) {
         fprintf(stderr, "Error: Pixel value cannot be less than 0\n");
         return -1;
@@ -249,27 +285,12 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     else if((size_t)value > header.maxColorSize) {
         fprintf(stderr, "Error: Pixel value cannot exceed supplied "
             "max color value\n");
+        return -1;
     }
 
-    value = fgetc(inputFd);
-    if(value == EOF) {
-        // If end-of-file reached and not at the very last pixel
-        if(feof(inputFd) && !isLast) {
-            fprintf(stderr, "Error: EOF reached before intended width"
-                " & height # of pixels read.\n");
-            return -1;
-        }
-        // If some read error has occurred
-        else if(ferror(inputFd)) {
-            fprintf(stderr, "Error: Read error on raster data\n");
-            return -1;
-        }
-    }
-    // If there isn't at least some whitespace inbetween each pixel
-    // and not at the very last pixel
-    else if(!isspace(value) && !isLast) {
-        fprintf(stderr, "Error: There must be at least one whitespace"
-            "character inbetween pixel data\n");
+    // Skip remaining potential whitespace inbetween channels, only if not at
+    // last pixel
+    if(!isLast && skipWhitespace(inputFd) < 0) {
         return -1;
     }
 
