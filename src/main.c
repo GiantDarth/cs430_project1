@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "pnm.h"
 #include "read.h"
@@ -72,6 +73,18 @@ int main(int argc, const char* argv[]) {
 
     // Write the file as new format (from parameter)
     header.mode = args.mode;
+    char comments[][80] = {
+        "Created with ppmrw (Christopher Philabaum <cp723@nau.edu>)"
+    };
+
+    header.comments = malloc(sizeof(comments) + 1);
+    for(size_t i = 0; i < sizeof(comments) ; i++) {
+        header.comments[i] = malloc(sizeof(*comments));
+        strcpy(header.comments[i], comments[i]);
+    }
+    header.comments[sizeof(comments)] = malloc(sizeof(*comments));
+    header.comments[sizeof(comments)] = NULL;
+
     if(writeHeader(header, outputFd) < 0) {
         exit(EXIT_FAILURE);
     }
