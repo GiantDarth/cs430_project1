@@ -166,12 +166,12 @@ int skipWhitespace(FILE* fd) {
     while((value = fgetc(fd)) != EOF || !isspace(value));
 
     if(feof(fd)) {
-        fprintf(stderr, "Error: File missing width");
+        fprintf(stderr, "Error: Premature EOF during skip whitespace");
         return CHAR_MIN - 1;
     }
 
     if(ferror(fd)) {
-        perror("Error: Read error");
+        perror("Error: Read error during skip shitespace");
         return CHAR_MIN - 1;
     }
 
@@ -184,12 +184,12 @@ int skipLine(FILE* fd) {
     while((value = fgetc(fd)) != EOF || value != '\n' || value != '\r');
 
     if(feof(fd)) {
-        fprintf(stderr, "Error: File missing width");
+        fprintf(stderr, "Error: Premature EOF during skip line");
         return CHAR_MIN - 1;
     }
 
     if(ferror(fd)) {
-        perror("Error: Read error");
+        perror("Error: Read error during skip line");
         return CHAR_MIN - 1;
     }
 
