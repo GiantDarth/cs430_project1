@@ -2,6 +2,8 @@
 #include <stdlib.h>
 
 #include "pnm.h"
+#include "read.h"
+#include "write.h"
 
 struct args {
     // Some integer 1-6
@@ -52,8 +54,30 @@ int main(int argc, const char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    pnmHeader header;
+    pixel* pixels;
+
     // Read the file, get format
+    if(readHeader(&header, inputFd) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if((pixels = (pixel*)malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
+        perror("Error: Memory allocation error");
+        exit(EXIT_FAILURE);
+    }
+    if(readBody(header, pixels, inputFd) < 0) {
+        exit(EXIT_FAILURE);
+    }
+
     // Write the file as new format (from parameter)
+    header.mode = args.mode;
+    if(writeHeader(header, outputFd) < 0) {
+        exit(EXIT_FAILURE);
+    }
+    if(writeBody(header, pixels, outputFd) < 0) {
+        exit(EXIT_FAILURE);
+    }
 
     return EXIT_SUCCESS;
 }
