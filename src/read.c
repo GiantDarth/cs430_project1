@@ -242,14 +242,15 @@ int getMagicNumber(FILE* fd) {
 int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     char buffer[4] = { '\0' };
     char** endptr;
-    int c, value, i = 0;
+    int value, i = 0;
     // Continue to read character-by-character until end-of-buffer reached,
     // or end-of-file / read error reached, or some non-decimal is reached.
-    while((size_t)i < sizeof(buffer) - 1 && (c = fgetc(inputFd)) != EOF && isdigit(c)) {
-        buffer[i++] = c;
+    while((size_t)i < sizeof(buffer) - 1 && (value = fgetc(inputFd)) != EOF &&
+            isdigit(value)) {
+        buffer[i++] = value;
     }
 
-    if(c == EOF) {
+    if(value == EOF) {
         // If end-of-file reached and not at the very last pixel
         if(!isLast && feof(inputFd)) {
             fprintf(stderr, "Error: Premature EOF reading pixel data");
@@ -263,7 +264,7 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     }
     // If there isn't at least some whitespace inbetween each pixel
     // and not at the very last pixel
-    else if(!isLast && !isspace(c)) {
+    else if(!isLast && !isspace(value)) {
         fprintf(stderr, "Error: There must be at least one whitespace "
             "character inbetween pixel data\n");
         return -1;
