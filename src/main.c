@@ -15,7 +15,7 @@ struct args {
 
 int main(int argc, const char* argv[]) {
     if(argc != 4) {
-        fprintf(stderr, "usage: pnm2pnm modeNum /path/to/inputFile /path/to/outputFile");
+        fprintf(stderr, "usage: ppmrw [3|6] /path/to/inputFile /path/to/outputFile");
         exit(EXIT_FAILURE);
     }
 
