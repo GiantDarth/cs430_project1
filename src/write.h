@@ -6,6 +6,6 @@
 #include "pnm.h"
 
 int writeHeader(pnmHeader header, FILE* outputFd);
-int writeBody(pnmHeader header, char* buffer, FILE* outputFd);
+int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd);
 
 #endif // CS430_PNM_WRITE_H
