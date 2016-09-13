@@ -7,6 +7,9 @@
 #define CS430_PNM_BITMAP_MAX 255
 #define CS430_PNM_GREY_MAX 65535
 #define CS430_PNM_FULL_MAX 65535
+#define CS430_PNM_MAX_SUPPORTED 255
+#define CS430_WIDTH_MIN 1
+#define CS430_HEIGHT_MIN 1
 
 typedef struct pnmHeader {
     int mode;

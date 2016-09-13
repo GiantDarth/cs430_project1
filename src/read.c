@@ -6,6 +6,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "read.h"
 
@@ -14,15 +15,18 @@ int skipWhitespace(FILE* fd);
 int skipLine(FILE* fd);
 int skipUntilNext(FILE* fd);
 int getMagicNumber(FILE* fd);
+long long getNumber(size_t maxDigits, FILE* fd);
 
 int readHeader(pnmHeader* header, FILE* inputFd) {
-    int value;
+    long long value;
 
     // Read the magic number, if any
-    if((header->mode = getMagicNumber(inputFd)) < 0) {
+    if((value = getMagicNumber(inputFd)) < 0) {
         return -1;
     }
-
+    else {
+        header->mode = value;
+    }
 
     if(skipUntilNext(inputFd) < 0) {
         return -1;
@@ -30,21 +34,16 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
 
 
     // Read the width, if there is one.
-    value = fscanf(inputFd, "%llu", &(header->width));
-    if(value == EOF) {
-        fprintf(stderr, "Error: No valid width before EOF\n");
+    if((value = getNumber(20, inputFd)) < 0) {
         return -1;
     }
-
-    if(value < 1) {
-        fprintf(stderr, "Error: Invalid width (non-digits)\n");
+    else if(value < CS430_WIDTH_MIN) {
+        fprintf(stderr, "Error: Width cannot be less than %d\n", CS430_WIDTH_MIN);
         return -1;
     }
-
-    if(header->width == 0) {
-        fprintf(stderr, "Error: Width must be greater than 0\n");
+    else {
+        header->width = value;
     }
-
 
     if(skipUntilNext(inputFd) < 0) {
         return -1;
@@ -52,60 +51,61 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
 
 
     // Read the height, if there is one.
-    value = fscanf(inputFd, "%llu", &(header->height));
-    if(value == EOF) {
-        fprintf(stderr, "Error: No valid height before EOF\n");
+    if((value = getNumber(20, inputFd)) < 0) {
         return -1;
     }
-
-    if(value < 1) {
-        fprintf(stderr, "Error: Invalid height (non-digits)\n");
+    else if(value < 1) {
+        fprintf(stderr, "Error: Height cannot be less than %d\n", CS430_HEIGHT_MIN);
         return -1;
     }
-
-    if(header->height == 0) {
-        fprintf(stderr, "Error: Height must be greater than 0\n");
+    else {
+        header->height = value;
     }
-
 
     if(skipUntilNext(inputFd) < 0) {
         return -1;
     }
 
 
-    // Read the maxColorSize, if there is one.
-    value = fscanf(inputFd, "%llu", &(header->maxColorSize));
-    if(value == EOF) {
-        fprintf(stderr, "Error: No valid width before EOF\n");
+    if((value = getNumber(5, inputFd)) < 0) {
         return -1;
     }
-
-    if(value < 1) {
-        fprintf(stderr, "Error: Invalid width (non-digits)\n");
-        return -1;
-    }
-
-    if(value < CS430_PNM_MIN) {
+    else if(value < CS430_PNM_MIN) {
         fprintf(stderr, "Error: Max color value cannot be less than %d.\n",
             CS430_PNM_MIN);
         return -1;
     }
-
     // If the value exceeds 1 byte (8-bits)
-    if(value > 255) {
-        fprintf(stderr, "Error: Max color value cannot be greater than 1 byte (aka. 255)\n");
+    else if(value > CS430_PNM_MAX_SUPPORTED) {
+        fprintf(stderr, "Error: Max color value cannot be greater than 1 byte (aka. %d)\n",
+            CS430_PNM_MAX_SUPPORTED);
         return -1;
     }
-
-
-    if(skipUntilNext(inputFd) < 0) {
-        return -1;
+    else {
+        header->maxColorSize = value;
     }
 
+    // If next character starts a comment, then skip the remaining
+    while((value == '#' && (value = skipLine(inputFd)) >= CHAR_MIN));
+    if(value < CHAR_MIN) {
+        return -1;
+    }
+    else if((value = fgetc(inputFd)) == EOF) {
+        // If end-of-file reached and not at the very last pixel
+        if(feof(inputFd)) {
+            fprintf(stderr, "Error: Premature EOF reading pixel data");
+            return -1;
+        }
+        // If some read error has occurred
+        else if(ferror(inputFd)) {
+            perror("Error: Read error during pixel data");
+            return -1;
+        }
+    }
 
     // If character immediately following the max color value or comments is not
     // whitespace, then return on error.
-    if(!isspace(fgetc(inputFd))) {
+    if(!isspace(value)) {
         fprintf(stderr, "Error: Pixel values must be preceeded by a single whitespace\n");
         return -1;
     }
@@ -212,7 +212,7 @@ int skipUntilNext(FILE* fd) {
 }
 
 int getMagicNumber(FILE* fd) {
-    char buffer[3];
+    char buffer[3] = { '\0' };
 
     fgets(buffer, 3, fd);
     if(buffer == NULL) {
@@ -237,6 +237,56 @@ int getMagicNumber(FILE* fd) {
 
     // Convert ASCII to single-digit number.
     return buffer[1] - '0';
+}
+
+long long getNumber(size_t maxDigits, FILE* fd) {
+    char buffer[maxDigits + 1];
+    char** endptr;
+    size_t i = 0;
+
+    long long value;
+
+    // Continue to read character-by-character until end-of-buffer reached,
+    // or end-of-file / read error reached, or some non-decimal is reached.
+    while(i < maxDigits && (value = fgetc(fd)) != EOF &&
+            isdigit(value)) {
+        buffer[i++] = value;
+    }
+
+    if(value == EOF) {
+        // If end-of-file reached and not at the very last pixel
+        if(feof(fd)) {
+            fprintf(stderr, "Error: Premature EOF in header");
+            return -1;
+        }
+        // If some read error has occurred
+        else if(ferror(fd)) {
+            perror("Error: Read error during header");
+            return -1;
+        }
+    }
+
+    value = strtoll(buffer, endptr, 10);
+    // If the first character is not empty and the set first invalid
+    // character is empty, then the whole string is valid. (see 'man strtol')
+    // Otherwise, part of the string is not a number.
+    if(!(*buffer != '\0' && **endptr == '\0')) {
+        fprintf(stderr, "Error: Invalid value (non-decimal)\n");
+        return -1;
+    }
+
+    if(errno == ERANGE) {
+        if(value == LONG_LONG_MAX) {
+            fprintf(stderr, "Error: Value larger than %lld\n", LONG_LONG_MAX);
+        }
+        else {
+            fprintf(stderr, "Error: Value smaller than %lld\n", LONG_LONG_MIN);
+        }
+
+        return -1;
+    }
+
+    return value;
 }
 
 int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
