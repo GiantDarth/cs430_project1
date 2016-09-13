@@ -64,7 +64,7 @@ int main(int argc, const char* argv[]) {
     }
 
     if((pixels = (pixel*)malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
-        perror("Error: Memory allocation error");
+        perror("Error: Memory allocation error on pixels");
         exit(EXIT_FAILURE);
     }
     if(readBody(header, pixels, inputFd) < 0) {
@@ -91,6 +91,8 @@ int main(int argc, const char* argv[]) {
     if(writeBody(header, pixels, outputFd) < 0) {
         exit(EXIT_FAILURE);
     }
+
+    // No need to free pixels as memory will be released once program ends
 
     return EXIT_SUCCESS;
 }
