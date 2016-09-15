@@ -164,7 +164,7 @@ int skipWhitespace(FILE* fd) {
     char value;
 
     // Loop until either EOF or no whitespace remains.
-    while((value = fgetc(fd)) != EOF || !isspace(value));
+    while((value = fgetc(fd)) != EOF && isspace(value));
 
     if(feof(fd)) {
         fprintf(stderr, "Error: Premature EOF during skip whitespace");
@@ -182,7 +182,7 @@ int skipWhitespace(FILE* fd) {
 int skipLine(FILE* fd) {
     char value;
 
-    while((value = fgetc(fd)) != EOF || value != '\n' || value != '\r');
+    while((value = fgetc(fd)) != EOF && value != '\n' && value != '\r');
 
     if(feof(fd)) {
         fprintf(stderr, "Error: Premature EOF during skip line");
