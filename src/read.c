@@ -275,11 +275,11 @@ long long getNumber(size_t maxDigits, FILE* fd) {
     }
 
     if(errno == ERANGE) {
-        if(value == LONG_LONG_MAX) {
-            fprintf(stderr, "Error: Value larger than %lld\n", LONG_LONG_MAX);
+        if(value == LLONG_MAX) {
+            fprintf(stderr, "Error: Value larger than %lld\n", LLONG_MAX);
         }
         else {
-            fprintf(stderr, "Error: Value smaller than %lld\n", LONG_LONG_MIN);
+            fprintf(stderr, "Error: Value smaller than %lld\n", LLONG_MIN);
         }
 
         return -1;
