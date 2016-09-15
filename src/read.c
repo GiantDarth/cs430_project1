@@ -93,12 +93,12 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
     else if((value = fgetc(inputFd)) == EOF) {
         // If end-of-file reached and not at the very last pixel
         if(feof(inputFd)) {
-            fprintf(stderr, "Error: Premature EOF reading pixel data");
+            fprintf(stderr, "Error: Premature EOF reading pixel data\n");
             return -1;
         }
         // If some read error has occurred
         else if(ferror(inputFd)) {
-            perror("Error: Read error during pixel data");
+            perror("Error: Read error during pixel data\n");
             return -1;
         }
     }
@@ -167,12 +167,12 @@ int skipWhitespace(FILE* fd) {
     while((value = fgetc(fd)) != EOF && isspace(value));
 
     if(feof(fd)) {
-        fprintf(stderr, "Error: Premature EOF during skip whitespace");
+        fprintf(stderr, "Error: Premature EOF during skip whitespace\n");
         return CHAR_MIN - 1;
     }
 
     if(ferror(fd)) {
-        perror("Error: Read error during skip shitespace");
+        perror("Error: Read error during skip shitespace\n");
         return CHAR_MIN - 1;
     }
 
@@ -185,12 +185,12 @@ int skipLine(FILE* fd) {
     while((value = fgetc(fd)) != EOF && value != '\n' && value != '\r');
 
     if(feof(fd)) {
-        fprintf(stderr, "Error: Premature EOF during skip line");
+        fprintf(stderr, "Error: Premature EOF during skip line\n");
         return CHAR_MIN - 1;
     }
 
     if(ferror(fd)) {
-        perror("Error: Read error during skip line");
+        perror("Error: Read error during skip line\n");
         return CHAR_MIN - 1;
     }
 
@@ -209,7 +209,7 @@ int skipUntilNext(FILE* fd) {
     }
 
     if((value != '\n' && value != '\r') && ungetc(value, fd) == EOF) {
-        perror("Error: Read error during unget newline");
+        perror("Error: Read error during unget newline\n");
         return -1;
     }
 
@@ -220,12 +220,12 @@ int getMagicNumber(FILE* fd) {
     char buffer[3] = { '\0' };
 
     if(fgets(buffer, 3, fd) == NULL) {
-        fprintf(stderr, "Error: Empty file");
+        fprintf(stderr, "Error: Empty file\n");
         return -1;
     }
 
     if(strlen(buffer) < 2) {
-        fprintf(stderr, "Error: Magic number less than two characters");
+        fprintf(stderr, "Error: Magic number less than two characters\n");
         return -1;
     }
 
@@ -260,12 +260,12 @@ long long getNumber(size_t maxDigits, FILE* fd) {
     if(value == EOF) {
         // If end-of-file reached and not at the very last pixel
         if(feof(fd)) {
-            fprintf(stderr, "Error: Premature EOF in header");
+            fprintf(stderr, "Error: Premature EOF in header\n");
             return -1;
         }
         // If some read error has occurred
         else if(ferror(fd)) {
-            perror("Error: Read error during header");
+            perror("Error: Read error during header\n");
             return -1;
         }
     }
@@ -312,12 +312,12 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     if(value == EOF) {
         // If end-of-file reached and not at the very last pixel
         if(!isLast && feof(inputFd)) {
-            fprintf(stderr, "Error: Premature EOF reading pixel data");
+            fprintf(stderr, "Error: Premature EOF reading pixel data\n");
             return -1;
         }
         // If some read error has occurred
         else if(ferror(inputFd)) {
-            perror("Error: Read error during pixel data");
+            perror("Error: Read error during pixel data\n");
             return -1;
         }
     }
