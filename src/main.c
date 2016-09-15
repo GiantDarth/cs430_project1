@@ -20,13 +20,13 @@ int main(int argc, const char* argv[]) {
     }
 
     struct args args;
-    char** endptr;
+    char* endptr;
     // Convert arg1 to integer such as "3"
-    args.mode = strtol(argv[1], endptr, 10);
+    args.mode = strtol(argv[1], &endptr, 10);
     // If the first character is not empty and the set first invalid
     // character is empty, then the whole string is valid. (see 'man strtol')
     // Otherwise, part of the string is not a number.
-    if(!(*(argv[1]) != '\0' && **endptr == '\0')) {
+    if(!(*(argv[1]) != '\0' && *endptr == '\0')) {
         fprintf(stderr, "Error: Invalid mode\n");
         exit(EXIT_FAILURE);
     }

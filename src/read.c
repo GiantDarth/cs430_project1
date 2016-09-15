@@ -240,7 +240,7 @@ int getMagicNumber(FILE* fd) {
 
 long long getNumber(size_t maxDigits, FILE* fd) {
     char buffer[maxDigits + 1];
-    char** endptr;
+    char* endptr;
     size_t i = 0;
 
     long long value = 0;
@@ -265,11 +265,11 @@ long long getNumber(size_t maxDigits, FILE* fd) {
         }
     }
 
-    value = strtoll(buffer, endptr, 10);
+    value = strtoll(buffer, &endptr, 10);
     // If the first character is not empty and the set first invalid
     // character is empty, then the whole string is valid. (see 'man strtol')
     // Otherwise, part of the string is not a number.
-    if(!(*buffer != '\0' && **endptr == '\0')) {
+    if(!(*buffer != '\0' && *endptr == '\0')) {
         fprintf(stderr, "Error: Invalid value (non-decimal)\n");
         return -1;
     }
@@ -290,7 +290,7 @@ long long getNumber(size_t maxDigits, FILE* fd) {
 
 int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     char buffer[4] = { '\0' };
-    char** endptr;
+    char* endptr;
     int value, i = 0;
     // Continue to read character-by-character until end-of-buffer reached,
     // or end-of-file / read error reached, or some non-decimal is reached.
@@ -319,11 +319,11 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
         return -1;
     }
 
-    value = strtol(buffer, endptr, 10);
+    value = strtol(buffer, &endptr, 10);
     // If the first character is not empty and the set first invalid
     // character is empty, then the whole string is valid. (see 'man strtol')
     // Otherwise, part of the string is not a number.
-    if(!(*buffer != '\0' && **endptr == '\0')) {
+    if(!(*buffer != '\0' && *endptr == '\0')) {
         fprintf(stderr, "Error: Invalid decimal value on channel\n");
         return -1;
     }
