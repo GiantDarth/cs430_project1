@@ -15,7 +15,7 @@ struct args {
 
 int main(int argc, const char* argv[]) {
     if(argc != 4) {
-        fprintf(stderr, "usage: ppmrw [3|6] /path/to/inputFile /path/to/outputFile");
+        fprintf(stderr, "usage: ppmrw [3|6] /path/to/inputFile /path/to/outputFile\n");
         exit(EXIT_FAILURE);
     }
 
@@ -64,7 +64,7 @@ int main(int argc, const char* argv[]) {
     }
 
     if((pixels = (pixel*)malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
-        perror("Error: Memory allocation error on pixels");
+        perror("Error: Memory allocation error on pixels\n");
         exit(EXIT_FAILURE);
     }
     if(readBody(header, pixels, inputFd) < 0) {
