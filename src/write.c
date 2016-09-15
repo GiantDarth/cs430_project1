@@ -26,9 +26,11 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
     }
 
     fprintf(outputFd, "P%d\n", header.mode);
-    size_t i = 0;
-    while(header.comments[i] != NULL) {
-        fprintf(outputFd, "# %s\n", header.comments[i++]);
+    if(header.comments != NULL) {
+        size_t i = 0;
+        while(header.comments[i] != NULL) {
+            fprintf(outputFd, "# %s\n", header.comments[i++]);
+        }
     }
 
     fprintf(outputFd, "%zu %zu\n", header.width, header.height);
