@@ -31,10 +31,10 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
         fprintf(outputFd, "# %s\n", header.comments[i++]);
     }
 
-    fprintf(outputFd, "%llu %llu\n", header.width, header.height);
+    fprintf(outputFd, "%zu %zu\n", header.width, header.height);
     // If not P1 or P4, then write maxColorSize
     if(header.mode % 3 != 1) {
-        fprintf(outputFd, "%llu\n", header.maxColorSize);
+        fprintf(outputFd, "%zu\n", header.maxColorSize);
     }
 
     return 0;
