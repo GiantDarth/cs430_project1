@@ -214,8 +214,7 @@ int skipUntilNext(FILE* fd) {
 int getMagicNumber(FILE* fd) {
     char buffer[3] = { '\0' };
 
-    fgets(buffer, 3, fd);
-    if(buffer == NULL) {
+    if(fgets(buffer, 3, fd) == NULL) {
         fprintf(stderr, "Error: Empty file");
         return -1;
     }
