@@ -243,7 +243,7 @@ long long getNumber(size_t maxDigits, FILE* fd) {
     char** endptr;
     size_t i = 0;
 
-    long long value;
+    long long value = 0;
 
     // Continue to read character-by-character until end-of-buffer reached,
     // or end-of-file / read error reached, or some non-decimal is reached.
