@@ -270,6 +270,11 @@ long long getNumber(size_t maxDigits, FILE* fd) {
         }
     }
 
+    if(ungetc(value, fd) == EOF) {
+        perror("Error: Read error on ungetc\n");
+        return -1;
+    }
+
     value = strtoll(buffer, &endptr, 10);
     // If the first character is not empty and the set first invalid
     // character is empty, then the whole string is valid. (see 'man strtol')
