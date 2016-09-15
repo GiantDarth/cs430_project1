@@ -46,12 +46,12 @@ int main(int argc, const char* argv[]) {
     FILE* outputFd;
 
     if((inputFd = fopen(args.inputPath, "r")) == NULL) {
-        perror("Error: opening input file\n");
+        perror("Error: Cannot open input file\n");
         exit(EXIT_FAILURE);
     }
 
     if((outputFd = fopen(args.outputPath, "w")) == NULL) {
-        perror("Error: opening output file\n");
+        perror("Error: Cannot open output file\n");
         exit(EXIT_FAILURE);
     }
 
