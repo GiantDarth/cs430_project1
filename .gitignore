@@ -1,4 +1,5 @@
 out/
+perf.data
 
 # Object files
 *.o
