@@ -208,6 +208,11 @@ int skipUntilNext(FILE* fd) {
         return -1;
     }
 
+    if((value != '\n' && value != '\r') && ungetc(value, fd) == EOF) {
+        perror("Error: Read error during unget newline");
+        return -1;
+    }
+
     return 0;
 }
 
