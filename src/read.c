@@ -32,7 +32,6 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         return -1;
     }
 
-
     // Read the width, if there is one.
     if((value = getNumber(20, inputFd)) < 0) {
         return -1;
@@ -49,7 +48,6 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         return -1;
     }
 
-
     // Read the height, if there is one.
     if((value = getNumber(20, inputFd)) < 0) {
         return -1;
@@ -65,7 +63,6 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
     if(skipUntilNext(inputFd) < 0) {
         return -1;
     }
-
 
     if((value = getNumber(5, inputFd)) < 0) {
         return -1;
