@@ -26,12 +26,8 @@ int writeHeader(pnmHeader header, FILE* outputFd) {
     }
 
     fprintf(outputFd, "P%d\n", header.mode);
-    if(header.comments != NULL) {
-        size_t i = 0;
-        while(header.comments[i] != NULL) {
-            fprintf(outputFd, "# %s\n", header.comments[i++]);
-        }
-    }
+
+    fprintf(outputFd, "# Created with ppmrw (Christopher Philabaum <cp723@nau.edu>)\n");
 
     fprintf(outputFd, "%zu %zu\n", header.width, header.height);
     // If not P1 or P4, then write maxColorSize
