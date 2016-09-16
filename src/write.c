@@ -68,16 +68,23 @@ int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
     else if(header.mode == 3) {
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
+                // For the start of every 5 pixels excluding the first,
+                // indent line by one space for better readability
                 if(j % 5 == 0 && j > 0) {
                     fprintf(outputFd, " ");
                 }
+                // Write the channels as unsigned decimal values and space them
+                // with single spaces
                 fprintf(outputFd, "%u", pixels[i * header.width + j].red);
                 fprintf(outputFd, " %u", pixels[i * header.width + j].green);
                 fprintf(outputFd, " %u", pixels[i * header.width + j].blue);
 
+                // For the end of every 5 pixels, end the line with a newline
+                // to avoid lines >70 characters (based on the ppm documentation)
                 if(j % 5 == 4) {
                     fprintf(outputFd, "\n");
                 }
+                // Otherwise, space inebtween each pixel 3 spaces
                 else {
                     fprintf(outputFd, "   ");
                 }
