@@ -65,13 +65,18 @@ int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
     else if(header.mode == 3) {
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
-                fprintf(outputFd, "%d", pixels[header.height * i + j].red);
-                fprintf(outputFd, " %d", pixels[header.height * i + j].green);
-                fprintf(outputFd, " %d", pixels[header.height * i + j].blue);
+                if(j % 5 == 0 && j > 0) {
+                    fprintf(outputFd, " ");
+                }
+                fprintf(outputFd, "%u", pixels[i * header.width + j].red);
+                fprintf(outputFd, " %u", pixels[i * header.width + j].green);
+                fprintf(outputFd, " %u", pixels[i * header.width + j].blue);
 
-                // If not the last item, write a following tab.
-                if(j < header.width - 1) {
-                    fprintf(outputFd, "\t");
+                if(j % 5 == 4) {
+                    fprintf(outputFd, "\n");
+                }
+                else {
+                    fprintf(outputFd, "   ");
                 }
             }
 

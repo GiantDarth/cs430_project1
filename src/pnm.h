@@ -10,6 +10,7 @@
 #define CS430_PNM_MAX_SUPPORTED 255
 #define CS430_WIDTH_MIN 1
 #define CS430_HEIGHT_MIN 1
+#define CS430_MAX_LINE 70
 
 typedef struct pnmHeader {
     int mode;
