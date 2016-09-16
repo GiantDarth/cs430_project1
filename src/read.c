@@ -1,6 +1,3 @@
-// Fixes missing %llu type warning when using Mingw/Mingw-w64
-#define __USE_MINGW_ANSI_STDIO 1
-
 #include <inttypes.h>
 #include <ctype.h>
 #include <string.h>
