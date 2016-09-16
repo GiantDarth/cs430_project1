@@ -60,7 +60,13 @@ int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
     if(header.mode == 6) {
         // Write height * width number of pixels, which each pixel sizeof itself
         // (e.g. 3 bytes for 3 channels)
-        fwrite(pixels, sizeof(*pixels), header.height * header.width, outputFd);
+        for(size_t i = 0; i < header.height; i++) {
+            for(size_t j = 0; j < header.width; j++) {
+                fwrite(&(pixels[i * header.width + j].red), 1, 1, outputFd);
+                fwrite(&(pixels[i * header.width + j].green), 1, 1, outputFd);
+                fwrite(&(pixels[i * header.width + j].blue), 1, 1, outputFd);
+            }
+        }
     }
     else if(header.mode == 3) {
         for(size_t i = 0; i < header.height; i++) {

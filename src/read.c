@@ -144,12 +144,12 @@ int readBody(pnmHeader header, pixel* pixels, FILE* inputFd) {
         }
     }
     else if(header.mode == 6) {
-        size_t size = header.height * header.width;
-        size_t readSize = fread(pixels, sizeof(*pixels), size, inputFd);
-        if(readSize < size) {
-            fprintf(stderr, "Error: # of bytes read is less than what width & "
-                "height intended\n");
-            return -1;
+        for(size_t i = 0; i < header.height; i++) {
+            for(size_t j = 0; j < header.width; j++) {
+                fread(&(pixels[i * header.width + j].red), 1, 1, inputFd);
+                fread(&(pixels[i * header.width + j].green), 1, 1, inputFd);
+                fread(&(pixels[i * header.width + j].blue), 1, 1, inputFd);
+            }
         }
     }
     else {
