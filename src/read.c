@@ -333,10 +333,44 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     }
     // If there isn't at least some whitespace inbetween each pixel
     // and not at the very last pixel
-    else if(!isLast && !isspace(value)) {
-        fprintf(stderr, "Error: There must be at least one whitespace "
-            "character inbetween pixel data\n");
-        return -1;
+    else if(!isLast) {
+        // If the last read character is a digit still (if the number read is 3
+        // digits long out of the 4 possible bytes), then get the next
+        // character to use for whitespace check instead
+        if(isdigit(value)) {
+            value = fgetc(inputFd);
+
+            if(value == EOF) {
+                // If end-of-file reached and not at the very last pixel
+                if(!isLast && feof(inputFd)) {
+                    fprintf(stderr, "Error: Premature EOF reading pixel data\n");
+                    return -1;
+                }
+                // If some read error has occurred
+                else if(ferror(inputFd)) {
+                    perror("Error: Read error during pixel data\n");
+                    return -1;
+                }
+            }
+        }
+
+        // Check if at least one whitespace splits channel data
+        if(!isspace(value)) {
+            fprintf(stderr, "Error: There must be at least one whitespace "
+                "character inbetween pixel data\n");
+            return -1;
+        }
+
+        // Skip remaining potential whitespace inbetween channels
+        if((value = skipWhitespace(inputFd)) < 0) {
+            return -1;
+        }
+
+        // Undo the first digit of the next channel value
+        if(ungetc(value, inputFd) == EOF) {
+            fprintf(stderr, "Error: Read error ungetting digit in pixel data\n");
+            return -1;
+        }
     }
 
     value = strtol(buffer, &endptr, 10);
@@ -355,12 +389,6 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
     else if((size_t)value > header.maxColorSize) {
         fprintf(stderr, "Error: Pixel value cannot exceed supplied "
             "max color value\n");
-        return -1;
-    }
-
-    // Skip remaining potential whitespace inbetween channels, only if not at
-    // last pixel
-    if(!isLast && skipWhitespace(inputFd) < 0) {
         return -1;
     }
 
