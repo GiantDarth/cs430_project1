@@ -341,8 +341,8 @@ int readChannel(pnmHeader header, FILE* inputFd, int isLast) {
             value = fgetc(inputFd);
 
             if(value == EOF) {
-                // If end-of-file reached and not at the very last pixel
-                if(!isLast && feof(inputFd)) {
+                // If end-of-file reached
+                if(feof(inputFd)) {
                     fprintf(stderr, "Error: Premature EOF reading pixel data\n");
                     return -1;
                 }
