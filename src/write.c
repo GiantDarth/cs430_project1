@@ -55,8 +55,8 @@ int writeBody(pnmHeader header, pixel* pixels, FILE* outputFd) {
 
     // If P4 - P7, set write mode as binary.
     if(header.mode == 6) {
-        // Write height * width number of pixels, which each pixel sizeof itself
-        // (e.g. 3 bytes for 3 channels)
+        // Loop through the image buffer like a grid, individually writing red,
+        // green, and blue explicitly to avoid endianness errors (wrong byte order)
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
                 fwrite(&(pixels[i * header.width + j].red), 1, 1, outputFd);

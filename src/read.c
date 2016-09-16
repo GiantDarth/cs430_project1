@@ -153,6 +153,8 @@ int readBody(pnmHeader header, pixel* pixels, FILE* inputFd) {
         }
     }
     else if(header.mode == 6) {
+        // Loop through the following raw binary in the file with the image
+        // represented from top-to-bottom going row-by-row
         for(size_t i = 0; i < header.height; i++) {
             for(size_t j = 0; j < header.width; j++) {
                 fread(&(pixels[i * header.width + j].red), 1, 1, inputFd);
