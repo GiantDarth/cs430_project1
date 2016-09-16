@@ -1,5 +1,7 @@
 out/
 perf.data
+*.jpg
+*.png
 
 # Object files
 *.o
