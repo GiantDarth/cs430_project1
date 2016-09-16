@@ -85,12 +85,7 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         header->maxColorSize = value;
     }
 
-    // If next character starts a comment, then skip the remaining
-    while((value == '#' && (value = skipLine(inputFd)) >= CHAR_MIN));
-    if(value < CHAR_MIN) {
-        return -1;
-    }
-    else if((value = fgetc(inputFd)) == EOF) {
+    if((value = fgetc(inputFd)) == EOF) {
         // If end-of-file reached and not at the very last pixel
         if(feof(inputFd)) {
             fprintf(stderr, "Error: Premature EOF reading pixel data\n");
@@ -100,6 +95,26 @@ int readHeader(pnmHeader* header, FILE* inputFd) {
         else if(ferror(inputFd)) {
             perror("Error: Read error during pixel data\n");
             return -1;
+        }
+    }
+
+    if(value == '#') {
+        // If next character starts a comment, then skip the remaining
+        while((value == '#' && (value = skipLine(inputFd)) >= CHAR_MIN));
+        if(value < CHAR_MIN) {
+            return -1;
+        }
+        else if((value = fgetc(inputFd)) == EOF) {
+            // If end-of-file reached and not at the very last pixel
+            if(feof(inputFd)) {
+                fprintf(stderr, "Error: Premature EOF reading pixel data\n");
+                return -1;
+            }
+            // If some read error has occurred
+            else if(ferror(inputFd)) {
+                perror("Error: Read error during pixel data\n");
+                return -1;
+            }
         }
     }
 
