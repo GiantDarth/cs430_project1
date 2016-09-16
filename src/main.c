@@ -16,7 +16,7 @@ struct args {
 int main(int argc, const char* argv[]) {
     if(argc != 4) {
         fprintf(stderr, "usage: ppmrw [3|6] /path/to/inputFile /path/to/outputFile\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     struct args args;
@@ -28,15 +28,15 @@ int main(int argc, const char* argv[]) {
     // Otherwise, part of the string is not a number.
     if(!(*(argv[1]) != '\0' && *endptr == '\0')) {
         fprintf(stderr, "Error: Invalid mode\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     else if(args.mode < 1 || args.mode > 7) {
         fprintf(stderr, "Error: P%d does not exist\n", args.mode);
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     else if(args.mode == 7) {
         fprintf(stderr, "Error: P7 is currently not supported\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     args.inputPath = argv[2];
@@ -47,12 +47,12 @@ int main(int argc, const char* argv[]) {
 
     if((inputFd = fopen(args.inputPath, "r")) == NULL) {
         perror("Error: Cannot open input file\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if((outputFd = fopen(args.outputPath, "w")) == NULL) {
         perror("Error: Cannot open output file\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     pnmHeader header;
@@ -60,28 +60,27 @@ int main(int argc, const char* argv[]) {
 
     // Read the file, get format
     if(readHeader(&header, inputFd) < 0) {
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if((pixels = (pixel*)malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
         perror("Error: Memory allocation error on pixels\n");
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     if(readBody(header, pixels, inputFd) < 0) {
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     // Write the file as new format (from parameter)
     header.mode = args.mode;
 
     if(writeHeader(header, outputFd) < 0) {
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
     if(writeBody(header, pixels, outputFd) < 0) {
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     // No need to free pixels as memory will be released once program ends
-
     return EXIT_SUCCESS;
 }
