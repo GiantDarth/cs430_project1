@@ -129,26 +129,25 @@ int readBody(pnmHeader header, pixel* pixels, FILE* inputFd) {
     }
 
     if(header.mode == 3) {
-        int value, isLast;
+        int value;
 
-        for(size_t j = 0; j < header.height; j++) {
-            for(size_t i = 0; i < header.width; i++) {
-                isLast = j == header.height -1 && i == header.width;
-
-                if((value = readChannel(header, inputFd, isLast)) < 0) {
+        for(size_t i = 0; i < header.height; i++) {
+            for(size_t j = 0; j < header.width; j++) {
+                if((value = readChannel(header, inputFd, 0)) < 0) {
                     return -1;
                 }
-                pixels[j * header.height + i].red = value;
+                pixels[i * header.width + j].red = value;
 
-                if((value = readChannel(header, inputFd, isLast)) < 0) {
+                if((value = readChannel(header, inputFd, 0)) < 0) {
                     return -1;
                 }
-                pixels[j * header.height + i].green = value;
+                pixels[i * header.width + j].green = value;
 
-                if((value = readChannel(header, inputFd, isLast)) < 0) {
+                if((value = readChannel(header, inputFd, (i == header.height - 1) &&
+                        (j == header.width - 1))) < 0) {
                     return -1;
                 }
-                pixels[j * header.height + i].blue = value;
+                pixels[i * header.width + j].blue = value;
             }
         }
     }
