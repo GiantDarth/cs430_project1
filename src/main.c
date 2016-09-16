@@ -63,7 +63,7 @@ int main(int argc, const char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    if((pixels = (pixel*)malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
+    if((pixels = malloc(sizeof(*pixels) * header.width * header.height)) == NULL) {
         perror("Error: Memory allocation error on pixels\n");
         return EXIT_FAILURE;
     }
