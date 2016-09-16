@@ -256,7 +256,7 @@ int getMagicNumber(FILE* fd) {
 }
 
 long long getNumber(size_t maxDigits, FILE* fd) {
-    char buffer[maxDigits + 1];
+    char buffer[64] = { '\0' };
     char* endptr;
     size_t i = 0;
 
