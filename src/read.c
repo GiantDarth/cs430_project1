@@ -1,3 +1,5 @@
+#define __USE_MINGW_ANSI_STDIO 1
+
 #include <inttypes.h>
 #include <ctype.h>
 #include <string.h>
