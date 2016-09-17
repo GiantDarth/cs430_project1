@@ -33,4 +33,4 @@ All parameters are *required* and not optional. All parameters must be used in t
 * Because make compiles `ppmrw` to `out/`, in order to run it properly it should be used as `out/ppmrw [3|6] /path/to/input.ppm /path/to/output.ppm`.
 * I have two test images in the `img/` directory, one for ASCII/text, and one for binary.
 * Even though I have `.clang_complete` as a file, this is only used in conjunction with a package for **Atom**, and the Makefile properly uses `gcc` instead.
-* The output file should contain the line/comment "# Created with ppmrw (Christopher Philabaum &lt;cp723@nau.edu&gt;)" following the magic number.
+* The output file should contain the line/comment "*# Created with ppmrw (Christopher Philabaum &lt;cp723@nau.edu&gt;)*" following the magic number.
